@@ -1,0 +1,667 @@
+/* ==========================================================================
+   APPLE MAPS 3D GLOBE — LIQUID GLASS DESIGN SYSTEM
+   Ultra-Minimalist, Spatial Architecture, Pitch Black Space & Specular Glass
+   ========================================================================== */
+
+:root {
+  --bg-space: #000000;
+  --glass-surface: rgba(18, 20, 26, 0.72);
+  --glass-surface-elevated: rgba(28, 32, 42, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-focus: rgba(0, 122, 255, 0.45);
+  --glass-specular: 1px solid rgba(255, 255, 255, 0.15);
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(235, 235, 245, 0.65);
+  --text-tertiary: rgba(235, 235, 245, 0.38);
+  
+  --apple-blue: #0A84FF;
+  --apple-cyan: #64D2FF;
+  --apple-green: #30D158;
+  --apple-amber: #FF9F0A;
+  
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-fluid: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-space);
+  color: var(--text-primary);
+  font-family: var(--font-system);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Canvas Container */
+#webgl-canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  outline: none;
+  cursor: grab;
+}
+
+#webgl-canvas-container.is-dragging {
+  cursor: grabbing;
+}
+
+/* UI Overlay Layer */
+.ui-overlay-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+}
+
+/* Floating Glass Header */
+.top-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.apple-pill-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--glass-surface);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: var(--glass-specular);
+  border-radius: 999px;
+  padding: 8px 18px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  font-size: 0.86rem;
+  letter-spacing: -0.01em;
+}
+
+.apple-glyph {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+.brand-title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.brand-separator {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.live-solar-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+}
+
+.solar-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--apple-green);
+  box-shadow: 0 0 10px var(--apple-green);
+  animation: pulse-glow 2.4s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Search Autocomplete Bar */
+.search-container {
+  position: relative;
+  width: 320px;
+}
+
+.search-input-box {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: var(--glass-surface);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: var(--glass-specular);
+  border-radius: 999px;
+  padding: 7px 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  transition: all 260ms var(--ease-spring);
+}
+
+.search-input-box:focus-within {
+  background: var(--glass-surface-elevated);
+  border-color: var(--glass-border-focus);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25), 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.search-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+.search-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFF;
+  font-family: inherit;
+  font-size: 0.85rem;
+  letter-spacing: -0.01em;
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  background: rgba(22, 25, 34, 0.88);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: var(--glass-specular);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+}
+
+.search-dropdown.is-open {
+  display: flex;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 180ms ease;
+  font-size: 0.85rem;
+}
+
+.search-result-item:hover, .search-result-item.is-selected {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.search-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-flag {
+  font-size: 1.1rem;
+}
+
+.search-country-name {
+  font-weight: 500;
+  color: #FFF;
+}
+
+.search-continent {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Poetic Initial State Hero Badge */
+.hero-poetic-badge {
+  position: absolute;
+  top: 96px;
+  left: 28px;
+  max-width: 360px;
+  background: var(--glass-surface);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: var(--glass-specular);
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  transition: opacity 400ms var(--ease-spring), transform 400ms var(--ease-spring);
+}
+
+.hero-poetic-badge.is-hidden {
+  opacity: 0;
+  transform: translateY(-16px) scale(0.96);
+  pointer-events: none;
+}
+
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.hero-planet-name {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #FFFFFF 30%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-tag {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--apple-cyan);
+  background: rgba(100, 210, 255, 0.12);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.hero-poetic-text {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.hero-explore-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+/* Floating Bottom Controls Pill */
+.bottom-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.control-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass-surface);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: var(--glass-specular);
+  border-radius: 999px;
+  padding: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.control-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #FFF;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.control-btn.is-active {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--apple-cyan);
+}
+
+.control-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Apple-Style Slide-In Country Info Card */
+.country-card-panel {
+  position: fixed;
+  top: 24px;
+  bottom: 24px;
+  right: 24px;
+  width: 410px;
+  background: rgba(18, 20, 27, 0.78);
+  backdrop-filter: blur(36px);
+  -webkit-backdrop-filter: blur(36px);
+  border: var(--glass-specular);
+  border-radius: 28px;
+  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(calc(100% + 40px));
+  transition: transform 560ms var(--ease-spring), opacity 400ms ease;
+  opacity: 0;
+  pointer-events: auto;
+  z-index: 50;
+}
+
+.country-card-panel.is-open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.card-header-banner {
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+}
+
+.card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.country-flag-badge {
+  font-size: 1.8rem;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.country-heading-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #FFF;
+}
+
+.country-native-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.card-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  outline: none;
+  color: #FFF;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.card-close-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}
+
+/* Real-Time Live Clock Widget */
+.clock-widget-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  margin: 18px 24px 0;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.clock-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clock-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--apple-cyan);
+  font-weight: 600;
+}
+
+.clock-live-time {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #FFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-date-str {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.clock-tz-badge {
+  font-size: 0.74rem;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+
+/* Scrollable Card Body */
+.card-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.card-scroll-body::-webkit-scrollbar {
+  width: 4px;
+}
+.card-scroll-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.history-text {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Landmarks Carousel / Grid */
+.landmarks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landmark-item-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+  transition: all 220ms ease;
+}
+
+.landmark-item-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.landmark-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.landmark-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #FFF;
+}
+
+.landmark-badge {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(10, 132, 255, 0.16);
+  color: var(--apple-blue);
+  font-weight: 500;
+}
+
+.landmark-desc {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* Quick Facts Matrix */
+.facts-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.fact-box {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+}
+
+.fact-k {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 3px;
+}
+
+.fact-v {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #FFF;
+}
+
+/* Card Action Footer */
+.card-action-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn-primary {
+  flex: 1;
+  background: #FFF;
+  color: #000;
+  border: none;
+  outline: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.88);
+  transform: translateY(-1px);
+}
+
+.action-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .country-card-panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 68vh;
+    border-radius: 28px 28px 0 0;
+    transform: translateY(100%);
+  }
+  .country-card-panel.is-open {
+    transform: translateY(0);
+  }
+  .hero-poetic-badge {
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+  .search-container {
+    width: 200px;
+  }
+}
