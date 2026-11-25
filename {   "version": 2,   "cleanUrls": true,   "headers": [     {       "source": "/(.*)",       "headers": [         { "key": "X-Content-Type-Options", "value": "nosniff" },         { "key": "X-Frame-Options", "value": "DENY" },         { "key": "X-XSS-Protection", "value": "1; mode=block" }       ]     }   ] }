@@ -1,0 +1,20 @@
+{
+  "name": "apple-earth-globe-3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "High-end 3D interactive Earth globe web application inspired by Apple Maps spatial design",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "threejs",
+    "webgl",
+    "earth-globe",
+    "apple-maps",
+    "spatial-ui",
+    "gsap"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}
